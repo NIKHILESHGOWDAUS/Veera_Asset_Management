@@ -1,0 +1,60 @@
+
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:13
+    container_name: postgres33
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: admin123
+      POSTGRES_DB: asset_management
+    ports:
+      - "5901:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build: ./Backend
+    container_name: backend31
+    ports:
+      - "3901:3901"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      - NODE_ENV=production
+
+  frontend:
+    build: ./Frontend
+    container_name: frontend31
+    ports:
+      - "9022:80"
+    depends_on:
+      - backend
+
+  hr:
+    build: ./HR
+    container_name: hr31
+    ports:
+      - "9023:80"
+    depends_on:
+      - backend
+
+  request:
+    build: ./Request
+    container_name: request11
+    ports:
+      - "9024:80"
+    depends_on:
+      - backend
+
+volumes:
+  postgres_data:
+
